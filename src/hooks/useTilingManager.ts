@@ -60,7 +60,7 @@ const createInitialState = (): TilingState => {
     rootId,
     focusedId: null,
     layout: 'tiling',
-    lastSplitDirection: 'horizontal',
+    lastSplitDirection: 'vertical',
   };
 };
 
@@ -114,7 +114,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
             ...state.nodes,
             [rootNode.id]: {
               ...rootNode,
-              children: [...rootNode.children, windowId],
+              children: [windowId],
+              direction: 'horizontal',
             },
             [windowId]: newWindow,
           },
@@ -133,8 +134,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
             
           if (!parentNode) return state;
           
-          // Toggle split direction
-          const nextDirection = state.lastSplitDirection === 'horizontal' ? 'vertical' : 'horizontal';
+          // Toggle split direction - changed to start with horizontal first
+          const nextDirection = state.lastSplitDirection === 'vertical' ? 'horizontal' : 'vertical';
           
           // Create a new container for the focused window and new window
           const newContainerId = uuidv4();
@@ -205,6 +206,7 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       
       // If node has no parent, just remove it
       if (!nodeToRemove.parent) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [action.id]: _, ...remainingNodes } = state.nodes;
         
         // Find a new window to focus
@@ -225,7 +227,9 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       // If this is the only child, remove parent too if it's not the root
       if (parentContainer.children.length === 1) {
         if (parentContainer.id === state.rootId) {
-          // If it's the root with only one child, just remove the child
+          // If it's the root with only one child, just remove the child but keep the root
+          // Reset the root container to its initial state for proper new window positioning
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [action.id]: _, ...remainingNodes } = state.nodes;
           
           return {
@@ -235,6 +239,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
               [parentContainer.id]: {
                 ...parentContainer,
                 children: [],
+                direction: 'horizontal',
+                ratio: 0.5,
               },
             },
             focusedId: null,
@@ -253,6 +259,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
         const updatedGrandparentChildren = [...grandparent.children];
         updatedGrandparentChildren.splice(parentIndex, 1);
         
+        // Remove both nodes without creating unused variables
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [action.id]: _, [parentContainer.id]: __, ...remainingNodes } = state.nodes;
         
         // Find a new window to focus
@@ -280,6 +288,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       const updatedChildren = [...parentContainer.children];
       updatedChildren.splice(childIndex, 1);
       
+      // Use proper destructuring to avoid unused variable warning
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [action.id]: _, ...remainingNodes } = state.nodes;
       
       // Find next window to focus (prioritize siblings)
@@ -481,11 +491,12 @@ export function useTilingManager() {
   // Compute window positions and sizes based on the tree structure
   const computeLayout = () => {
     const layout: Record<string, { x: number; y: number; width: number; height: number }> = {};
-    // Define gap size in percentage
-    const GAP_SIZE = 0.8; // 0.8% gap between windows
+    // Define gap size in percentage - consistent for all sides
+    const GAP_SIZE = 1.0; // 1.0% gap between windows and at the edges
     
     if (!state.rootId) return layout;
     
+    // Calculate layout recursively with consistent gaps
     const calculateNodeLayout = (
       nodeId: string,
       x: number,
@@ -498,42 +509,71 @@ export function useTilingManager() {
       if (!node) return;
       
       if (node.type === 'window') {
-        // Apply margin to each window
-        layout[nodeId] = { 
-          x: x + GAP_SIZE / 2, 
-          y: y + GAP_SIZE / 2, 
-          width: width - GAP_SIZE, 
-          height: height - GAP_SIZE 
-        };
+        // For window nodes, store the layout exactly as passed
+        layout[nodeId] = { x, y, width, height };
       } else if (node.type === 'container') {
         if (node.children.length === 0) return;
         
         if (node.children.length === 1) {
+          // Pass through for single child (maintain the same coordinates)
           calculateNodeLayout(node.children[0], x, y, width, height);
           return;
         }
         
+        // For containers with two children, calculate split with gap
         const isHorizontal = node.direction === 'horizontal';
-        const availableSpace = isHorizontal ? width : height;
-        
-        // Use ratio to determine split position
-        const firstChildSpace = availableSpace * node.ratio;
-        const secondChildSpace = availableSpace - firstChildSpace;
         
         if (isHorizontal) {
-          // Split horizontally with gap
-          calculateNodeLayout(node.children[0], x, y, firstChildSpace - GAP_SIZE / 2, height);
-          calculateNodeLayout(node.children[1], x + firstChildSpace + GAP_SIZE / 2, y, secondChildSpace - GAP_SIZE / 2, height);
+          // Horizontal split
+          const firstChildWidth = (width - GAP_SIZE) * node.ratio;
+          const secondChildWidth = width - firstChildWidth - GAP_SIZE;
+          
+          calculateNodeLayout(
+            node.children[0],
+            x,
+            y,
+            firstChildWidth,
+            height
+          );
+          
+          calculateNodeLayout(
+            node.children[1],
+            x + firstChildWidth + GAP_SIZE,
+            y,
+            secondChildWidth,
+            height
+          );
         } else {
-          // Split vertically with gap
-          calculateNodeLayout(node.children[0], x, y, width, firstChildSpace - GAP_SIZE / 2);
-          calculateNodeLayout(node.children[1], x, y + firstChildSpace + GAP_SIZE / 2, width, secondChildSpace - GAP_SIZE / 2);
+          // Vertical split
+          const firstChildHeight = (height - GAP_SIZE) * node.ratio;
+          const secondChildHeight = height - firstChildHeight - GAP_SIZE;
+          
+          calculateNodeLayout(
+            node.children[0],
+            x,
+            y,
+            width,
+            firstChildHeight
+          );
+          
+          calculateNodeLayout(
+            node.children[1],
+            x,
+            y + firstChildHeight + GAP_SIZE,
+            width,
+            secondChildHeight
+          );
         }
       }
     };
     
-    // Start with the root node, giving it the full space (minus waybar height)
-    calculateNodeLayout(state.rootId, 0, 0, 100, 100);
+    // Add uniform outer gap to the entire workspace
+    const rootX = GAP_SIZE;
+    const rootY = GAP_SIZE;
+    const rootWidth = 100 - (GAP_SIZE * 2);
+    const rootHeight = 100 - (GAP_SIZE * 2);
+    
+    calculateNodeLayout(state.rootId, rootX, rootY, rootWidth, rootHeight);
     
     return layout;
   };

@@ -1,8 +1,9 @@
 import React, { useCallback, useMemo } from 'react';
-import { useTilingManager, TileWindow, TileDirection } from '../hooks/useTilingManager';
-import { TiledWindow } from './TiledWindow';
+import { TileWindow, TileDirection } from '../hooks/useTilingManager';
+import { TiledWindow } from './Window';
 import { KeybindingHandler } from './KeybindingHandler';
 import { KeyBinding } from '../hooks/useKeyBindings';
+import { useTiling } from '../contexts/TilingContext';
 
 interface TilingManagerProps {
   children?: React.ReactNode;
@@ -12,7 +13,6 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
   const {
     nodes,
     focusedId,
-    layout: layoutMode,
     computeLayout,
     addWindow,
     closeWindow,
@@ -21,7 +21,7 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
     toggleLayout,
     focusNextWindow,
     focusPreviousWindow,
-  } = useTilingManager();
+  } = useTiling();
   
   // Demo content creation function
   const createRandomContent = useCallback(() => {
@@ -55,17 +55,17 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
   // Define keybindings
   const keyBindings = useMemo<KeyBinding[]>(() => [
     {
-      key: 'Ctrl+o',
+      key: 'w',
       action: createRandomContent,
       description: 'Open a new window',
     },
     {
-      key: 'Alt+Tab',
+      key: 'Shift+Space',
       action: focusNextWindow,
       description: 'Focus next window',
     },
     {
-      key: 'Alt+Shift+Tab',
+      key: 'Ctrl+Space',
       action: focusPreviousWindow,
       description: 'Focus previous window',
     },
@@ -88,7 +88,7 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
       description: 'Split focused window vertically',
     },
     {
-      key: 'Alt+w',
+      key: 'q',
       action: () => {
         if (focusedId) {
           closeWindow(focusedId);
@@ -122,55 +122,7 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
   
   return (
     <KeybindingHandler keyBindings={keyBindings}>
-      <div className="waybar h-[5vh] w-full z-10 relative">
-        <div className="text-sm">Hyprfolio - Tiling Window Manager</div>
-        <div className="flex items-center gap-2">
-          <span>Layout: {layoutMode === 'tiling' ? 'Tiled' : 'Floating'}</span>
-          <button 
-            onClick={createRandomContent}
-            className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
-          >
-            New Window
-          </button>
-          <button 
-            onClick={toggleLayout}
-            className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
-          >
-            Toggle Layout
-          </button>
-          <button 
-            onClick={focusNextWindow}
-            className="bg-green-500 text-white px-2 py-1 rounded text-xs"
-          >
-            Next Window
-          </button>
-          {focusedId && (
-            <>
-              <button 
-                onClick={() => handleSplitHorizontal(focusedId)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-xs"
-              >
-                Split H
-              </button>
-              <button 
-                onClick={() => handleSplitVertical(focusedId)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-xs"
-              >
-                Split V
-              </button>
-              <button 
-                onClick={() => closeWindow(focusedId)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-xs"
-              >
-                Close
-              </button>
-            </>
-          )}
-          <span className="text-xs ml-2">Press F1 for help</span>
-        </div>
-      </div>
-      
-      <div className="relative h-[95vh] w-full bg-gray-100 dark:bg-gray-900 overflow-hidden z-10">
+      <div className="relative h-[95vh] w-full overflow-hidden z-10">
         {windowNodes.map(window => (
           <TiledWindow
             key={window.id}

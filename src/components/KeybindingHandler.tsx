@@ -29,12 +29,12 @@ export const KeybindingHandler: React.FC<KeybindingHandlerProps> = ({ keyBinding
     <div className="relative w-full h-full">
       {/* Background keybinding text */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="text-gray-200 dark:text-gray-800 text-opacity-5 dark:text-opacity-10 font-bold select-none text-center transform scale-125">
-          <div className="text-[120px] mb-8 tracking-widest">HYPRFOLIO</div>
-          <div className="grid grid-cols-2 gap-4 text-[18px] opacity-70 px-8">
+        <div className="text-white dark:text-white text-opacity-5 dark:text-opacity-10 font-bold select-none text-center transform scale-125">
+          <div className="text-[120px] mb-8 tracking-widest">HYPRWORLD</div>
+          <div className="gap-4 text-[18px] opacity-70 px-8">
             {allKeybindings.map((binding, i) => (
               <div key={i} className="flex items-center justify-start">
-                <span className="font-mono bg-gray-200 dark:bg-gray-800 bg-opacity-10 dark:bg-opacity-10 px-2 py-1 rounded mr-2 min-w-[90px] text-center">{binding.key}</span> 
+                <span className="font-mono bg-opacity-10 dark:bg-opacity-10 px-2 py-1 rounded mr-2 min-w-[90px] text-left">{binding.key}</span> 
                 <span>{binding.description}</span>
               </div>
             ))}

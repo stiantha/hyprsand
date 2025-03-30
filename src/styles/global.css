@@ -1,18 +1,6 @@
 @import "tailwindcss";
 
 @layer components {
-  .window {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden;
-  }
-  
-  .window-title-bar {
-    @apply bg-gray-100 dark:bg-gray-700 p-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-600;
-  }
-  
-  .window-focused {
-    @apply ring-2 ring-blue-500 dark:ring-blue-400;
-  }
-
   .waybar {
     @apply bg-gray-800 dark:bg-gray-900 text-white p-2 flex items-center justify-between;
   }
