@@ -38,7 +38,11 @@ export const TiledWindow: React.FC<TiledWindowProps> = ({
     transition: 'all 0.2s ease-in-out',
   };
 
-  const windowClasses = `window animate-window-fade-in rounded-lg shadow-lg border-1 ${isFocused ? 'window-focused border-blue-500 dark:border-blue-400' : 'border-gray-300 dark:border-gray-600'}`;
+  const windowClasses = `window animate-window-fade-in rounded-lg shadow-lg ${
+    isFocused 
+      ? 'ring-1 ring-blue-400/50 border border-white/20' 
+      : 'border border-white/10'
+  }`;
   
   return (
     <div
@@ -47,12 +51,12 @@ export const TiledWindow: React.FC<TiledWindowProps> = ({
       onMouseDown={handleMouseDown}
       data-testid={`window-${id}`}
     >
-      <div className="window-title-bar select-none rounded-t-lg flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-        <div className="text-gray-900 dark:text-white font-medium truncate">{title}</div>
+      <div className="window-title-bar select-none rounded-t-lg flex items-center justify-between p-2 bg-black/80 backdrop-blur-sm border-b border-white/10 text-white">
+        <div className="font-medium truncate">{title}</div>
         <div className="flex space-x-2">
           <button
             onClick={() => onSplitHorizontal(id)}
-            className="flex items-center justify-center w-5 h-5 text-xs rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
+            className="flex items-center justify-center w-5 h-5 text-xs rounded hover:bg-white/10 focus:outline-none transition-colors"
             aria-label="Split horizontally"
             title="Split horizontally"
           >
@@ -60,7 +64,7 @@ export const TiledWindow: React.FC<TiledWindowProps> = ({
           </button>
           <button
             onClick={() => onSplitVertical(id)}
-            className="flex items-center justify-center w-5 h-5 text-xs rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
+            className="flex items-center justify-center w-5 h-5 text-xs rounded hover:bg-white/10 focus:outline-none transition-colors"
             aria-label="Split vertically"
             title="Split vertically"
           >
@@ -68,7 +72,7 @@ export const TiledWindow: React.FC<TiledWindowProps> = ({
           </button>
           <button 
             onClick={() => onClose(id)}
-            className="flex items-center justify-center w-5 h-5 text-xs rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
+            className="flex items-center justify-center w-5 h-5 text-xs rounded hover:bg-white/10 focus:outline-none transition-colors"
             aria-label="Close"
             title="close window"
             >
@@ -77,7 +81,7 @@ export const TiledWindow: React.FC<TiledWindowProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto p-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-b-lg">
+      <div className="flex-1 overflow-auto p-4 bg-black/80 backdrop-blur-sm text-white rounded-b-lg">
         {content}
       </div>
     </div>

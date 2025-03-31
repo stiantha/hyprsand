@@ -122,7 +122,7 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
   
   return (
     <KeybindingHandler keyBindings={keyBindings}>
-      <div className="relative h-[95vh] w-full overflow-hidden z-10">
+      <div className="relative h-[95vh] w-full overflow-hidden z-10 bg-transparent">
         {windowNodes.map(window => (
           <TiledWindow
             key={window.id}

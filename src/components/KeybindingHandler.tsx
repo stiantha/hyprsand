@@ -28,19 +28,27 @@ export const KeybindingHandler: React.FC<KeybindingHandlerProps> = ({ keyBinding
   return (
     <div className="relative w-full h-full">
       {/* Background keybinding text */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="text-white dark:text-white text-opacity-5 dark:text-opacity-10 font-bold select-none text-center transform scale-125">
-          <div className="text-[120px] mb-8 tracking-widest">HYPRWORLD</div>
-          <div className="gap-4 text-[18px] opacity-70 px-8">
-            {allKeybindings.map((binding, i) => (
-              <div key={i} className="flex items-center justify-start">
-                <span className="font-mono bg-opacity-10 dark:bg-opacity-10 px-2 py-1 rounded mr-2 min-w-[90px] text-left">{binding.key}</span> 
-                <span>{binding.description}</span>
-              </div>
-            ))}
+{/*       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+        <div className="text-white dark:text-white text-opacity-5 dark:text-opacity-10 font-bold select-none flex flex-col items-center justify-center w-full">
+          <div className="text-[120px] mb-8 tracking-widest text-left">HYPRWORLD</div>
+          <div className="flex justify-center w-full">
+            <table className="text-[18px] opacity-70 mx-auto">
+              <tbody>
+                {allKeybindings.map((binding, i) => (
+                  <tr key={i}>
+                    <td className="text-right pr-4 pb-4 min-w-[150px]">
+                      <span className="font-mono bg-opacity-10 dark:bg-opacity-10 px-3 py-1 rounded inline-block">{binding.key}</span>
+                    </td>
+                    <td className="text-left pb-4">
+                      <span>{binding.description}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main content */}
       {children}

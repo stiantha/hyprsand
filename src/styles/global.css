@@ -2,6 +2,16 @@
 
 @layer components {
   .waybar {
-    @apply bg-gray-800 dark:bg-gray-900 text-white p-2 flex items-center justify-between;
+    @apply text-white p-2 flex items-center justify-between;
   }
+}
+
+/* Hide scrollbars but keep scroll functionality */
+::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }

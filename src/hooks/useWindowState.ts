@@ -13,7 +13,7 @@ export interface WindowState {
 }
 
 type WindowAction =
-  | { type: 'CREATE_WINDOW'; window: Omit<WindowState, 'zIndex' | 'isFocused'> }
+  | { type: 'CREATE_WINDOW'; window: Omit<WindowState, 'zIndex' | 'isFocused' | 'isMinimized' | 'isMaximized'> }
   | { type: 'CLOSE_WINDOW'; id: string }
   | { type: 'FOCUS_WINDOW'; id: string }
   | { type: 'MOVE_WINDOW'; id: string; position: { x: number; y: number } }
