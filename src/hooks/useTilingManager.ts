@@ -75,8 +75,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
         isFocused: true,
       };
 
-      // If there's no root, create a new container as root
-      if (!state.rootId) {
+      // If there's no root or root has no children, create a fresh root container
+      if (!state.rootId || Object.values(state.nodes).filter(node => node.type === 'window').length === 0) {
         const rootId = uuidv4();
         const rootContainer: TileContainer = {
           id: rootId,
@@ -90,39 +90,22 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
         // Set parent of the window
         newWindow.parent = rootId;
 
+        // Create a completely fresh state
         return {
-          ...state,
           nodes: {
             [rootId]: rootContainer,
             [windowId]: newWindow,
           },
           rootId: rootId,
           focusedId: windowId,
+          layout: 'tiling',
+          lastSplitDirection: 'vertical',
         };
       }
 
       // Add window to existing layout
       const rootNode = state.nodes[state.rootId] as TileContainer;
       
-      // If there are no windows yet, add it to the root
-      if (rootNode.children.length === 0) {
-        newWindow.parent = rootNode.id;
-        
-        return {
-          ...state,
-          nodes: {
-            ...state.nodes,
-            [rootNode.id]: {
-              ...rootNode,
-              children: [windowId],
-              direction: 'horizontal',
-            },
-            [windowId]: newWindow,
-          },
-          focusedId: windowId,
-        };
-      }
-
       // If there's a focused window, create a new container and split
       if (state.focusedId) {
         const focusedNode = state.nodes[state.focusedId];
@@ -204,6 +187,16 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       
       if (nodeToRemove.type !== 'window') return state;
       
+      // Count remaining windows
+      const remainingWindows = Object.values(state.nodes).filter(
+        node => node.type === 'window' && node.id !== action.id
+      ).length;
+
+      // If this is the last window, reset to initial state
+      if (remainingWindows === 0) {
+        return createInitialState();
+      }
+      
       // If node has no parent, just remove it
       if (!nodeToRemove.parent) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -227,24 +220,8 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       // If this is the only child, remove parent too if it's not the root
       if (parentContainer.children.length === 1) {
         if (parentContainer.id === state.rootId) {
-          // If it's the root with only one child, just remove the child but keep the root
-          // Reset the root container to its initial state for proper new window positioning
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { [action.id]: _, ...remainingNodes } = state.nodes;
-          
-          return {
-            ...state,
-            nodes: {
-              ...remainingNodes,
-              [parentContainer.id]: {
-                ...parentContainer,
-                children: [],
-                direction: 'horizontal',
-                ratio: 0.5,
-              },
-            },
-            focusedId: null,
-          };
+          // If it's the root with only one child, reset to initial state
+          return createInitialState();
         }
         
         // Otherwise remove both the parent and child

@@ -85,7 +85,7 @@ export const Waybar: React.FC = () => {
         }
         
         setPageMetrics({
-          loadTime: loadTime > 0 ? `${Math.round(loadTime)}ms` : 'calculating...'
+          loadTime: loadTime > 0 ? `${Math.round(loadTime)}ms` : '...'
         });
       };
       
