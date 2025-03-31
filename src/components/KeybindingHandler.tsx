@@ -30,7 +30,7 @@ export const KeybindingHandler: React.FC<KeybindingHandlerProps> = ({ keyBinding
       {/* Background keybinding text */}
 {/*       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <div className="text-white dark:text-white text-opacity-5 dark:text-opacity-10 font-bold select-none flex flex-col items-center justify-center w-full">
-          <div className="text-[120px] mb-8 tracking-widest text-left">HYPRWORLD</div>
+          <div className="text-[120px] mb-8 tracking-widest text-left">HYPRSAND</div>
           <div className="flex justify-center w-full">
             <table className="text-[18px] opacity-70 mx-auto">
               <tbody>
