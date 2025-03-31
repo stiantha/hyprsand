@@ -184,106 +184,147 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       if (!state.nodes[action.id]) return state;
       
       const nodeToRemove = state.nodes[action.id];
-      
       if (nodeToRemove.type !== 'window') return state;
-      
-      // Count remaining windows
+
+      // Get all remaining windows before any modifications
       const remainingWindows = Object.values(state.nodes).filter(
         node => node.type === 'window' && node.id !== action.id
-      ).length;
+      );
 
       // If this is the last window, reset to initial state
-      if (remainingWindows === 0) {
+      if (remainingWindows.length === 0) {
         return createInitialState();
       }
+
+      // Get the parent container
+      const parentContainer = nodeToRemove.parent ? state.nodes[nodeToRemove.parent] as TileContainer : null;
       
-      // If node has no parent, just remove it
-      if (!nodeToRemove.parent) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [action.id]: _, ...remainingNodes } = state.nodes;
+      // Remove the window from the nodes
+      let { [action.id]: _, ...remainingNodes } = state.nodes;
+
+      // Find next window to focus - prioritize siblings if available
+      let nextWindowToFocus = state.focusedId;
+      if (parentContainer) {
+        // Try to find a sibling window first
+        const siblings = parentContainer.children
+          .filter(id => id !== action.id)
+          .map(id => remainingNodes[id])
+          .filter(node => node && node.type === 'window');
         
-        // Find a new window to focus
-        const windowNodeIds = Object.keys(remainingNodes).filter(
-          id => remainingNodes[id].type === 'window'
-        );
-        
-        return {
-          ...state,
-          nodes: remainingNodes,
-          focusedId: windowNodeIds.length > 0 ? windowNodeIds[0] : null,
+        if (siblings.length > 0) {
+          nextWindowToFocus = siblings[0].id;
+        } else {
+          // If no siblings, take the first remaining window
+          nextWindowToFocus = remainingWindows[0].id;
+        }
+      } else {
+        nextWindowToFocus = remainingWindows[0].id;
+      }
+
+      // If this was the only child in its parent container
+      if (parentContainer && parentContainer.children.length <= 2) {
+        // Get the sibling if it exists
+        const siblingId = parentContainer.children.find(id => id !== action.id);
+        const sibling = siblingId ? remainingNodes[siblingId] : null;
+
+        // Remove the parent container
+        const { [parentContainer.id]: __, ...nodesWithoutParent } = remainingNodes;
+        remainingNodes = nodesWithoutParent;
+
+        if (sibling) {
+          // If parent had a parent, move the sibling up
+          if (parentContainer.parent) {
+            const grandparent = remainingNodes[parentContainer.parent] as TileContainer;
+            if (grandparent) {
+              // Replace the parent container with its remaining child in the grandparent
+              remainingNodes[parentContainer.parent] = {
+                ...grandparent,
+                children: grandparent.children.map(id => 
+                  id === parentContainer.id ? siblingId : id
+                )
+              };
+
+              // Update the sibling's parent reference
+              remainingNodes[siblingId] = {
+                ...sibling,
+                parent: parentContainer.parent
+              };
+            }
+          } else {
+            // If parent was the root, make the sibling the new root's child
+            const newRootId = uuidv4();
+            const newRoot: TileContainer = {
+              id: newRootId,
+              type: 'container',
+              direction: 'horizontal',
+              children: [siblingId],
+              parent: null,
+              ratio: 0.5
+            };
+
+            remainingNodes = {
+              ...remainingNodes,
+              [newRootId]: newRoot,
+              [siblingId]: {
+                ...sibling,
+                parent: newRootId
+              }
+            };
+
+            return {
+              ...state,
+              nodes: remainingNodes,
+              rootId: newRootId,
+              focusedId: nextWindowToFocus,
+              layout: state.layout,
+              lastSplitDirection: state.lastSplitDirection
+            };
+          }
+        }
+      } else if (parentContainer) {
+        // Update parent's children list
+        remainingNodes[parentContainer.id] = {
+          ...parentContainer,
+          children: parentContainer.children.filter(id => id !== action.id)
         };
       }
-      
-      // Get parent container
-      const parentContainer = state.nodes[nodeToRemove.parent] as TileContainer;
-      
-      // If this is the only child, remove parent too if it's not the root
-      if (parentContainer.children.length === 1) {
-        if (parentContainer.id === state.rootId) {
-          // If it's the root with only one child, reset to initial state
-          return createInitialState();
-        }
-        
-        // Otherwise remove both the parent and child
-        const grandparentId = parentContainer.parent;
-        if (!grandparentId) return state;
-        
-        const grandparent = state.nodes[grandparentId] as TileContainer;
-        const parentIndex = grandparent.children.indexOf(parentContainer.id);
-        
-        if (parentIndex === -1) return state;
-        
-        const updatedGrandparentChildren = [...grandparent.children];
-        updatedGrandparentChildren.splice(parentIndex, 1);
-        
-        // Remove both nodes without creating unused variables
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [action.id]: _, [parentContainer.id]: __, ...remainingNodes } = state.nodes;
-        
-        // Find a new window to focus
-        const windowNodeIds = Object.keys(remainingNodes).filter(
-          id => remainingNodes[id].type === 'window'
-        );
-        
+
+      // If only one window remains, simplify the structure
+      if (remainingWindows.length === 1) {
+        const lastWindow = remainingWindows[0];
+        const rootId = uuidv4();
+        const rootContainer: TileContainer = {
+          id: rootId,
+          type: 'container',
+          direction: 'horizontal',
+          children: [lastWindow.id],
+          parent: null,
+          ratio: 0.5,
+        };
+
         return {
           ...state,
           nodes: {
-            ...remainingNodes,
-            [grandparentId]: {
-              ...grandparent,
-              children: updatedGrandparentChildren,
-            },
+            [rootId]: rootContainer,
+            [lastWindow.id]: {
+              ...lastWindow,
+              parent: rootId,
+              isFocused: true
+            }
           },
-          focusedId: windowNodeIds.length > 0 ? windowNodeIds[0] : null,
+          rootId: rootId,
+          focusedId: lastWindow.id,
+          layout: state.layout,
+          lastSplitDirection: state.lastSplitDirection
         };
       }
-      
-      // If there are multiple children, just remove this one from the parent
-      const childIndex = parentContainer.children.indexOf(action.id);
-      if (childIndex === -1) return state;
-      
-      const updatedChildren = [...parentContainer.children];
-      updatedChildren.splice(childIndex, 1);
-      
-      // Use proper destructuring to avoid unused variable warning
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { [action.id]: _, ...remainingNodes } = state.nodes;
-      
-      // Find next window to focus (prioritize siblings)
-      const nextSibling = updatedChildren.length > 0
-        ? findFirstWindowInSubtree(updatedChildren, remainingNodes)
-        : null;
-      
+
       return {
         ...state,
-        nodes: {
-          ...remainingNodes,
-          [parentContainer.id]: {
-            ...parentContainer,
-            children: updatedChildren,
-          },
-        },
-        focusedId: nextSibling,
+        nodes: remainingNodes,
+        focusedId: nextWindowToFocus,
+        layout: state.layout,
+        lastSplitDirection: state.lastSplitDirection
       };
     }
     
