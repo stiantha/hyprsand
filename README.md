@@ -1,36 +1,45 @@
-# Hyprfolio
+<div align="center">
 
-A React-based tiling window manager application inspired by Hyprland OS. Hyprfolio allows users to create, organize, and manage windows in a grid-based tiling layout.
+# 🪟 Hyprsand
 
-## Features
+A React-based tiling window manager application inspired by Hyprland OS.
 
-- **Tiling Window Manager**: Windows are automatically arranged in a grid layout without overlapping
-- **Dynamic Splits**: Split windows horizontally or vertically
-- **Keyboard Shortcuts**: Control all window operations using keyboard shortcuts
-- **Dual Layouts**: Toggle between tiling and floating modes
-- **Dark Mode Support**: Built-in light and dark themes
-- **Waybar Integration**: System bar at the top of the screen
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## Tech Stack
+</div>
+
+## ✨ Features
+
+- 🗃️ **Tiling Window Manager**: Windows are automatically arranged in a grid layout without overlapping
+- 📏 **Dynamic Splits**: Split windows horizontally or vertically
+- ⌨️ **Keyboard Shortcuts**: Control all window operations using keyboard shortcuts
+- 🔄 **Dual Layouts**: Toggle between tiling and floating modes
+- 🌓 **Dark Mode Support**: Built-in light and dark themes
+- 📊 **Waybar Integration**: System bar at the top of the screen
+
+## 🛠️ Tech Stack
 
 - **React**: For building the UI components
 - **Tailwind CSS**: For styling with a utility-first approach
 - **TypeScript**: For type safety and maintainable code
 
-## Keyboard Shortcuts
+## ⌨️ Keyboard Shortcuts
 
 | Key Combination | Action |
 |----------------|--------|
-| Ctrl+O | Open a new window |
-| Alt+Tab | Focus next window |
-| Alt+Shift+Tab | Focus previous window |
-| Alt+H | Split focused window horizontally |
-| Alt+V | Split focused window vertically |
-| Alt+W | Close focused window |
-| Alt+T | Toggle between tiling and floating layouts |
-| F1 | Toggle keybinding help |
+| `Ctrl+O` | Open a new window |
+| `Alt+Tab` | Focus next window |
+| `Alt+Shift+Tab` | Focus previous window |
+| `Alt+H` | Split focused window horizontally |
+| `Alt+V` | Split focused window vertically |
+| `Alt+W` | Close focused window |
+| `Alt+T` | Toggle between tiling and floating layouts |
+| `F1` | Toggle keybinding help |
 
-## Architecture
+## 🏗️ Architecture
 
 The application uses a tree-based structure to manage window layouts:
 
@@ -48,7 +57,7 @@ The application uses a tree-based structure to manage window layouts:
 1. **useTilingManager**: Manages the tree structure for tiling windows
 2. **useKeyBindings**: Handles keybinding registrations and actions
 
-## Getting Started
+## 🚀 Getting Started
 
 To run the project locally:
 
@@ -60,7 +69,7 @@ npm install
 npm run dev
 ```
 
-## How It Works
+## 🔧 How It Works
 
 1. **Tree-Based Layout**: Windows are organized in a binary tree structure
    - Container nodes split the screen horizontally or vertically
@@ -74,7 +83,7 @@ npm run dev
    - The space is redistributed among other windows
    - The tree structure is optimized to minimize empty containers
 
-## Customizing
+## ⚙️ Customizing
 
 You can customize the tiling behavior by modifying:
 
