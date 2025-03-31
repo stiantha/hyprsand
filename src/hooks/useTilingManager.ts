@@ -199,8 +199,10 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       // Get the parent container
       const parentContainer = nodeToRemove.parent ? state.nodes[nodeToRemove.parent] as TileContainer : null;
       
-      // Remove the window from the nodes
-      let { [action.id]: _, ...remainingNodes } = state.nodes;
+      // Create a copy of nodes without the window to remove
+      const nodes = { ...state.nodes };
+      delete nodes[action.id];
+      const remainingNodes = nodes as Record<string, TileNode>;
 
       // Find next window to focus - prioritize siblings if available
       let nextWindowToFocus = state.focusedId;
@@ -209,7 +211,7 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
         const siblings = parentContainer.children
           .filter(id => id !== action.id)
           .map(id => remainingNodes[id])
-          .filter(node => node && node.type === 'window');
+          .filter((node): node is TileWindow => node?.type === 'window');
         
         if (siblings.length > 0) {
           nextWindowToFocus = siblings[0].id;
@@ -227,11 +229,12 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
         const siblingId = parentContainer.children.find(id => id !== action.id);
         const sibling = siblingId ? remainingNodes[siblingId] : null;
 
-        // Remove the parent container
-        const { [parentContainer.id]: __, ...nodesWithoutParent } = remainingNodes;
-        remainingNodes = nodesWithoutParent;
+        // Remove the parent container from nodes
+        if (parentContainer.id in remainingNodes) {
+          delete remainingNodes[parentContainer.id];
+        }
 
-        if (sibling) {
+        if (sibling && siblingId) {
           // If parent had a parent, move the sibling up
           if (parentContainer.parent) {
             const grandparent = remainingNodes[parentContainer.parent] as TileContainer;
@@ -242,13 +245,13 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
                 children: grandparent.children.map(id => 
                   id === parentContainer.id ? siblingId : id
                 )
-              };
+              } as TileContainer;
 
               // Update the sibling's parent reference
               remainingNodes[siblingId] = {
                 ...sibling,
                 parent: parentContainer.parent
-              };
+              } as TileNode;
             }
           } else {
             // If parent was the root, make the sibling the new root's child
@@ -262,18 +265,15 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
               ratio: 0.5
             };
 
-            remainingNodes = {
-              ...remainingNodes,
-              [newRootId]: newRoot,
-              [siblingId]: {
-                ...sibling,
-                parent: newRootId
-              }
-            };
-
             return {
               ...state,
-              nodes: remainingNodes,
+              nodes: {
+                [newRootId]: newRoot,
+                [siblingId]: {
+                  ...sibling,
+                  parent: newRootId
+                }
+              } as Record<string, TileNode>,
               rootId: newRootId,
               focusedId: nextWindowToFocus,
               layout: state.layout,
@@ -281,50 +281,12 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
             };
           }
         }
-      } else if (parentContainer) {
-        // Update parent's children list
-        remainingNodes[parentContainer.id] = {
-          ...parentContainer,
-          children: parentContainer.children.filter(id => id !== action.id)
-        };
-      }
-
-      // If only one window remains, simplify the structure
-      if (remainingWindows.length === 1) {
-        const lastWindow = remainingWindows[0];
-        const rootId = uuidv4();
-        const rootContainer: TileContainer = {
-          id: rootId,
-          type: 'container',
-          direction: 'horizontal',
-          children: [lastWindow.id],
-          parent: null,
-          ratio: 0.5,
-        };
-
-        return {
-          ...state,
-          nodes: {
-            [rootId]: rootContainer,
-            [lastWindow.id]: {
-              ...lastWindow,
-              parent: rootId,
-              isFocused: true
-            }
-          },
-          rootId: rootId,
-          focusedId: lastWindow.id,
-          layout: state.layout,
-          lastSplitDirection: state.lastSplitDirection
-        };
       }
 
       return {
         ...state,
         nodes: remainingNodes,
-        focusedId: nextWindowToFocus,
-        layout: state.layout,
-        lastSplitDirection: state.lastSplitDirection
+        focusedId: nextWindowToFocus
       };
     }
     
@@ -458,26 +420,6 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       return state;
   }
 };
-
-// Helper function to find the first window node in a subtree
-function findFirstWindowInSubtree(
-  nodeIds: string[],
-  nodes: Record<string, TileNode>
-): string | null {
-  for (const nodeId of nodeIds) {
-    const node = nodes[nodeId];
-    if (!node) continue;
-    
-    if (node.type === 'window') {
-      return node.id;
-    } else if (node.type === 'container') {
-      const windowId = findFirstWindowInSubtree(node.children, nodes);
-      if (windowId) return windowId;
-    }
-  }
-  
-  return null;
-}
 
 export function useTilingManager() {
   const [state, dispatch] = useReducer(tilingReducer, null, createInitialState);
