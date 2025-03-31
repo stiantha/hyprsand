@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🪟 Hyprsand
+# 🪟 Hyprsand dd
 
 A React-based tiling window manager application inspired by Hyprland OS.
 
