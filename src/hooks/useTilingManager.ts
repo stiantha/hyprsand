@@ -469,7 +469,7 @@ export function useTilingManager() {
   const computeLayout = () => {
     const layout: Record<string, { x: number; y: number; width: number; height: number }> = {};
     // Define gap size in percentage - consistent for all sides
-    const GAP_SIZE = 1.0; // 1.0% gap between windows and at the edges
+    const GAP_SIZE = 0.5; // 0.5% gap between windows and at the edges
     
     if (!state.rootId) return layout;
     
@@ -501,9 +501,10 @@ export function useTilingManager() {
         const isHorizontal = node.direction === 'horizontal';
         
         if (isHorizontal) {
-          // Horizontal split
-          const firstChildWidth = (width - GAP_SIZE) * node.ratio;
-          const secondChildWidth = width - firstChildWidth - GAP_SIZE;
+          // Horizontal split - calculate available space after gap
+          const availableWidth = width;
+          const firstChildWidth = (availableWidth * node.ratio) - (GAP_SIZE / 2);
+          const secondChildWidth = availableWidth - firstChildWidth - GAP_SIZE;
           
           calculateNodeLayout(
             node.children[0],
@@ -521,9 +522,10 @@ export function useTilingManager() {
             height
           );
         } else {
-          // Vertical split
-          const firstChildHeight = (height - GAP_SIZE) * node.ratio;
-          const secondChildHeight = height - firstChildHeight - GAP_SIZE;
+          // Vertical split - calculate available space after gap
+          const availableHeight = height;
+          const firstChildHeight = (availableHeight * node.ratio) - (GAP_SIZE / 2);
+          const secondChildHeight = availableHeight - firstChildHeight - GAP_SIZE;
           
           calculateNodeLayout(
             node.children[0],
