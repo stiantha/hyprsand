@@ -2,7 +2,7 @@ import { useReducer } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export type TileDirection = 'horizontal' | 'vertical';
-export type TileNodeType = 'container' | 'window';
+export type TileNodeType = 'container' | 'tile';
 
 export interface BaseTileNode {
   id: string;
@@ -10,8 +10,8 @@ export interface BaseTileNode {
   parent: string | null;
 }
 
-export interface TileWindow extends BaseTileNode {
-  type: 'window';
+export interface Tile extends BaseTileNode {
+  type: 'tile';
   title: string;
   content: React.ReactNode;
   isFocused: boolean;
@@ -24,7 +24,7 @@ export interface TileContainer extends BaseTileNode {
   ratio: number;
 }
 
-export type TileNode = TileWindow | TileContainer;
+export type TileNode = Tile | TileContainer;
 
 export interface TilingState {
   nodes: Record<string, TileNode>;
@@ -35,10 +35,10 @@ export interface TilingState {
 }
 
 type TilingAction = 
-  | { type: 'ADD_WINDOW'; window: Omit<TileWindow, 'id' | 'parent' | 'isFocused'> }
-  | { type: 'CLOSE_WINDOW'; id: string }
-  | { type: 'FOCUS_WINDOW'; id: string }
-  | { type: 'SPLIT_WINDOW'; id: string; direction: TileDirection }
+  | { type: 'ADD_TILE'; tile: Omit<Tile, 'id' | 'parent' | 'isFocused'> }
+  | { type: 'CLOSE_TILE'; id: string }
+  | { type: 'FOCUS_TILE'; id: string }
+  | { type: 'SPLIT_TILE'; id: string; direction: TileDirection }
   | { type: 'ADJUST_RATIO'; id: string; ratio: number }
   | { type: 'TOGGLE_LAYOUT' };
 
@@ -66,51 +66,51 @@ const createInitialState = (): TilingState => {
 
 const tilingReducer = (state: TilingState, action: TilingAction): TilingState => {
   switch (action.type) {
-    case 'ADD_WINDOW': {
-      const windowId = uuidv4();
-      const newWindow: TileWindow = {
-        ...action.window,
-        id: windowId,
+    case 'ADD_TILE': {
+      const tileId = uuidv4();
+      const newTile: Tile = {
+        ...action.tile,
+        id: tileId,
         parent: null,
         isFocused: true,
       };
 
       // If there's no root or root has no children, create a fresh root container
-      if (!state.rootId || Object.values(state.nodes).filter(node => node.type === 'window').length === 0) {
+      if (!state.rootId || Object.values(state.nodes).filter(node => node.type === 'tile').length === 0) {
         const rootId = uuidv4();
         const rootContainer: TileContainer = {
           id: rootId,
           type: 'container',
           direction: 'horizontal',
-          children: [windowId],
+          children: [tileId],
           parent: null,
           ratio: 0.5,
         };
 
-        // Set parent of the window
-        newWindow.parent = rootId;
+        // Set parent of the tile
+        newTile.parent = rootId;
 
         // Create a completely fresh state
         return {
           nodes: {
             [rootId]: rootContainer,
-            [windowId]: newWindow,
+            [tileId]: newTile,
           },
           rootId: rootId,
-          focusedId: windowId,
+          focusedId: tileId,
           layout: 'tiling',
           lastSplitDirection: 'vertical',
         };
       }
 
-      // Add window to existing layout
+      // Add tile to existing layout
       const rootNode = state.nodes[state.rootId] as TileContainer;
       
-      // If there's a focused window, create a new container and split
+      // If there's a focused tile, create a new container and split
       if (state.focusedId) {
         const focusedNode = state.nodes[state.focusedId];
         
-        if (focusedNode.type === 'window') {
+        if (focusedNode.type === 'tile') {
           const parentNode = focusedNode.parent 
             ? state.nodes[focusedNode.parent] as TileContainer
             : null;
@@ -120,13 +120,13 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
           // Toggle split direction - changed to start with horizontal first
           const nextDirection = state.lastSplitDirection === 'vertical' ? 'horizontal' : 'vertical';
           
-          // Create a new container for the focused window and new window
+          // Create a new container for the focused tile and new tile
           const newContainerId = uuidv4();
           const newContainer: TileContainer = {
             id: newContainerId,
             type: 'container',
             direction: nextDirection,
-            children: [focusedNode.id, windowId],
+            children: [focusedNode.id, tileId],
             parent: parentNode.id,
             ratio: 0.5,
           };
@@ -137,7 +137,7 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
           parentChildren.splice(focusedIndex, 1, newContainerId);
           
           // Update parent references
-          newWindow.parent = newContainerId;
+          newTile.parent = newContainerId;
           
           return {
             ...state,
@@ -153,74 +153,74 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
                 isFocused: false,
               },
               [newContainerId]: newContainer,
-              [windowId]: newWindow,
+              [tileId]: newTile,
             },
-            focusedId: windowId,
+            focusedId: tileId,
             lastSplitDirection: nextDirection,
           };
         }
       }
       
-      // If no window is focused or focused node is a container, add to root
+      // If no tile is focused or focused node is a container, add to root
       const updatedRoot = {
         ...rootNode,
-        children: [...rootNode.children, windowId],
+        children: [...rootNode.children, tileId],
       };
       
-      newWindow.parent = rootNode.id;
+      newTile.parent = rootNode.id;
       
       return {
         ...state,
         nodes: {
           ...state.nodes,
           [rootNode.id]: updatedRoot,
-          [windowId]: newWindow,
+          [tileId]: newTile,
         },
-        focusedId: windowId,
+        focusedId: tileId,
       };
     }
     
-    case 'CLOSE_WINDOW': {
+    case 'CLOSE_TILE': {
       if (!state.nodes[action.id]) return state;
       
       const nodeToRemove = state.nodes[action.id];
-      if (nodeToRemove.type !== 'window') return state;
+      if (nodeToRemove.type !== 'tile') return state;
 
-      // Get all remaining windows before any modifications
-      const remainingWindows = Object.values(state.nodes).filter(
-        node => node.type === 'window' && node.id !== action.id
+      // Get all remaining tiles before any modifications
+      const remainingTiles = Object.values(state.nodes).filter(
+        node => node.type === 'tile' && node.id !== action.id
       );
 
-      // If this is the last window, reset to initial state
-      if (remainingWindows.length === 0) {
+      // If this is the last tile, reset to initial state
+      if (remainingTiles.length === 0) {
         return createInitialState();
       }
 
       // Get the parent container
       const parentContainer = nodeToRemove.parent ? state.nodes[nodeToRemove.parent] as TileContainer : null;
       
-      // Create a copy of nodes without the window to remove
+      // Create a copy of nodes without the tile to remove
       const nodes = { ...state.nodes };
       delete nodes[action.id];
       const remainingNodes = nodes as Record<string, TileNode>;
 
-      // Find next window to focus - prioritize siblings if available
-      let nextWindowToFocus = state.focusedId;
+      // Find next tile to focus - prioritize siblings if available
+      let nextTileToFocus = state.focusedId;
       if (parentContainer) {
-        // Try to find a sibling window first
+        // Try to find a sibling tile first
         const siblings = parentContainer.children
           .filter(id => id !== action.id)
           .map(id => remainingNodes[id])
-          .filter((node): node is TileWindow => node?.type === 'window');
+          .filter((node): node is Tile => node?.type === 'tile');
         
         if (siblings.length > 0) {
-          nextWindowToFocus = siblings[0].id;
+          nextTileToFocus = siblings[0].id;
         } else {
-          // If no siblings, take the first remaining window
-          nextWindowToFocus = remainingWindows[0].id;
+          // If no siblings, take the first remaining tile
+          nextTileToFocus = remainingTiles[0].id;
         }
       } else {
-        nextWindowToFocus = remainingWindows[0].id;
+        nextTileToFocus = remainingTiles[0].id;
       }
 
       // If this was the only child in its parent container
@@ -275,7 +275,7 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
                 }
               } as Record<string, TileNode>,
               rootId: newRootId,
-              focusedId: nextWindowToFocus,
+              focusedId: nextTileToFocus,
               layout: state.layout,
               lastSplitDirection: state.lastSplitDirection
             };
@@ -286,18 +286,18 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       return {
         ...state,
         nodes: remainingNodes,
-        focusedId: nextWindowToFocus
+        focusedId: nextTileToFocus
       };
     }
     
-    case 'FOCUS_WINDOW': {
+    case 'FOCUS_TILE': {
       const nodeToFocus = state.nodes[action.id];
-      if (!nodeToFocus || nodeToFocus.type !== 'window') return state;
+      if (!nodeToFocus || nodeToFocus.type !== 'tile') return state;
       
-      // Unfocus all windows and focus the target
+      // Unfocus all tiles and focus the target
       const updatedNodes = Object.keys(state.nodes).reduce((acc, nodeId) => {
         const node = state.nodes[nodeId];
-        if (node.type === 'window') {
+        if (node.type === 'tile') {
           acc[nodeId] = {
             ...node,
             isFocused: nodeId === action.id,
@@ -315,16 +315,16 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
       };
     }
     
-    case 'SPLIT_WINDOW': {
+    case 'SPLIT_TILE': {
       const nodeToSplit = state.nodes[action.id];
-      if (!nodeToSplit || nodeToSplit.type !== 'window') return state;
+      if (!nodeToSplit || nodeToSplit.type !== 'tile') return state;
       
-      // Create a new window
-      const newWindowId = uuidv4();
-      const newWindow: TileWindow = {
-        id: newWindowId,
-        type: 'window',
-        title: 'New Window',
+      // Create a new tile
+      const newTileId = uuidv4();
+      const newTile: Tile = {
+        id: newTileId,
+        type: 'tile',
+        title: 'New Tile',
         content: null,
         parent: null,
         isFocused: true,
@@ -336,13 +336,13 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
         id: newContainerId,
         type: 'container',
         direction: action.direction,
-        children: [nodeToSplit.id, newWindowId],
+        children: [nodeToSplit.id, newTileId],
         parent: nodeToSplit.parent,
         ratio: 0.5,
       };
       
       // Update parent references
-      newWindow.parent = newContainerId;
+      newTile.parent = newContainerId;
       
       // If node has a parent, update parent's children
       if (nodeToSplit.parent) {
@@ -363,13 +363,13 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
               isFocused: false,
             },
             [newContainerId]: newContainer,
-            [newWindowId]: newWindow,
+            [newTileId]: newTile,
             [parentContainer.id]: {
               ...parentContainer,
               children: updatedParentChildren,
             },
           },
-          focusedId: newWindowId,
+          focusedId: newTileId,
           lastSplitDirection: action.direction,
         };
       } else {
@@ -384,10 +384,10 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
               isFocused: false,
             },
             [newContainerId]: newContainer,
-            [newWindowId]: newWindow,
+            [newTileId]: newTile,
           },
           rootId: newContainerId,
-          focusedId: newWindowId,
+          focusedId: newTileId,
           lastSplitDirection: action.direction,
         };
       }
@@ -424,20 +424,20 @@ const tilingReducer = (state: TilingState, action: TilingAction): TilingState =>
 export function useTilingManager() {
   const [state, dispatch] = useReducer(tilingReducer, null, createInitialState);
   
-  const addWindow = (window: Omit<TileWindow, 'id' | 'parent' | 'isFocused'>) => {
-    dispatch({ type: 'ADD_WINDOW', window });
+  const addTile = (tile: Omit<Tile, 'id' | 'parent' | 'isFocused'>) => {
+    dispatch({ type: 'ADD_TILE', tile });
   };
   
-  const closeWindow = (id: string) => {
-    dispatch({ type: 'CLOSE_WINDOW', id });
+  const closeTile = (id: string) => {
+    dispatch({ type: 'CLOSE_TILE', id });
   };
   
-  const focusWindow = (id: string) => {
-    dispatch({ type: 'FOCUS_WINDOW', id });
+  const focusTile = (id: string) => {
+    dispatch({ type: 'FOCUS_TILE', id });
   };
   
-  const splitWindow = (id: string, direction: TileDirection) => {
-    dispatch({ type: 'SPLIT_WINDOW', id, direction });
+  const splitTile = (id: string, direction: TileDirection) => {
+    dispatch({ type: 'SPLIT_TILE', id, direction });
   };
   
   const adjustRatio = (id: string, ratio: number) => {
@@ -448,11 +448,11 @@ export function useTilingManager() {
     dispatch({ type: 'TOGGLE_LAYOUT' });
   };
   
-  // Compute window positions and sizes based on the tree structure
+  // Compute tile positions and sizes based on the tree structure
   const computeLayout = () => {
     const layout: Record<string, { x: number; y: number; width: number; height: number }> = {};
     // Define gap size in percentage - consistent for all sides
-    const GAP_SIZE = 0.5; // 0.5% gap between windows and at the edges
+    const GAP_SIZE = 0.5; // 0.5% gap between tiles and at the edges
     
     if (!state.rootId) return layout;
     
@@ -468,8 +468,8 @@ export function useTilingManager() {
       
       if (!node) return;
       
-      if (node.type === 'window') {
-        // For window nodes, store the layout exactly as passed
+      if (node.type === 'tile') {
+        // For tile nodes, store the layout exactly as passed
         layout[nodeId] = { x, y, width, height };
       } else if (node.type === 'container') {
         if (node.children.length === 0) return;
@@ -540,30 +540,30 @@ export function useTilingManager() {
     return layout;
   };
   
-  const focusNextWindow = () => {
-    const windowNodes = Object.values(state.nodes).filter(
-      node => node.type === 'window'
-    ) as TileWindow[];
+  const focusNextTile = () => {
+    const tileNodes = Object.values(state.nodes).filter(
+      node => node.type === 'tile'
+    ) as Tile[];
     
-    if (windowNodes.length <= 1) return;
+    if (tileNodes.length <= 1) return;
     
-    const currentIndex = windowNodes.findIndex(w => w.id === state.focusedId);
-    const nextIndex = (currentIndex + 1) % windowNodes.length;
+    const currentIndex = tileNodes.findIndex(t => t.id === state.focusedId);
+    const nextIndex = (currentIndex + 1) % tileNodes.length;
     
-    focusWindow(windowNodes[nextIndex].id);
+    focusTile(tileNodes[nextIndex].id);
   };
   
-  const focusPreviousWindow = () => {
-    const windowNodes = Object.values(state.nodes).filter(
-      node => node.type === 'window'
-    ) as TileWindow[];
+  const focusPreviousTile = () => {
+    const tileNodes = Object.values(state.nodes).filter(
+      node => node.type === 'tile'
+    ) as Tile[];
     
-    if (windowNodes.length <= 1) return;
+    if (tileNodes.length <= 1) return;
     
-    const currentIndex = windowNodes.findIndex(w => w.id === state.focusedId);
-    const prevIndex = (currentIndex - 1 + windowNodes.length) % windowNodes.length;
+    const currentIndex = tileNodes.findIndex(t => t.id === state.focusedId);
+    const prevIndex = (currentIndex - 1 + tileNodes.length) % tileNodes.length;
     
-    focusWindow(windowNodes[prevIndex].id);
+    focusTile(tileNodes[prevIndex].id);
   };
   
   return {
@@ -572,13 +572,13 @@ export function useTilingManager() {
     focusedId: state.focusedId,
     layout: state.layout,
     computeLayout,
-    addWindow,
-    closeWindow,
-    focusWindow,
-    splitWindow,
+    addTile,
+    closeTile,
+    focusTile,
+    splitTile,
     adjustRatio,
     toggleLayout,
-    focusNextWindow,
-    focusPreviousWindow,
+    focusNextTile,
+    focusPreviousTile,
   };
 } 
