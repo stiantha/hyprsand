@@ -444,9 +444,6 @@ export function useTilingManager() {
     dispatch({ type: 'ADJUST_RATIO', id, ratio });
   };
   
-  const toggleLayout = () => {
-    dispatch({ type: 'TOGGLE_LAYOUT' });
-  };
   
   // Compute tile positions and sizes based on the tree structure
   const computeLayout = () => {
@@ -577,7 +574,6 @@ export function useTilingManager() {
     focusTile,
     splitTile,
     adjustRatio,
-    toggleLayout,
     focusNextTile,
     focusPreviousTile,
   };

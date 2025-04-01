@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Tile as TileType, TileDirection } from '../hooks/useTilingManager';
 import { Tile } from './Tile';
-import { KeybindingHandler } from './KeybindingHandler';
+import { KeybindingHandler } from '../handlers/KeybindingHandler';
 import { KeyBinding } from '../hooks/useKeyBindings';
 import { useTilingManager } from '../hooks/useTilingManager';
 
@@ -18,7 +18,6 @@ export function TilingManager({ children }: TilingManagerProps) {
     closeTile,
     focusTile,
     splitTile,
-    toggleLayout,
     focusNextTile,
     focusPreviousTile,
   } = useTilingManager();
@@ -96,11 +95,7 @@ export function TilingManager({ children }: TilingManagerProps) {
       },
       description: 'Close focused tile',
     },
-    {
-      key: 'Alt+t',
-      action: toggleLayout,
-      description: 'Toggle between tiling and floating layouts',
-    },
+
   ], [
     createRandomContent,
     focusNextTile,
@@ -109,7 +104,6 @@ export function TilingManager({ children }: TilingManagerProps) {
     handleSplitHorizontal,
     handleSplitVertical,
     closeTile,
-    toggleLayout,
   ]);
   
   // Compute the layout for all tiles
