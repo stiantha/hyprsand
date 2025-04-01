@@ -1,10 +1,4 @@
-import React from 'react';
-
-interface TextEditorProps {
-  id: string;
-}
-
-export const TextEditor: React.FC<TextEditorProps> = ({ id }) => {
+export const TextEditor = () => {
   return (
     <div className="h-full bg-gray-900 text-gray-100 font-mono p-2">
       <div className="flex flex-col h-full">

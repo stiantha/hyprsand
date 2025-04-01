@@ -1,10 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-interface BrowserProps {
-  id: string;
-}
-
-export const Browser: React.FC<BrowserProps> = ({ id }) => {
+export const Browser = () => {
   const [url, setUrl] = useState('https://example.com');
 
   return (
