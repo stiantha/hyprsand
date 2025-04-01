@@ -1,6 +1,9 @@
+<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD041 -->
+
 <div align="center">
 
-# 🪟 Hyprsand dd
+# 🪟 Hyprsand
 
 A React-based tiling window manager application inspired by Hyprland OS.
 
