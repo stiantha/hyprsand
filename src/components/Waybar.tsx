@@ -166,7 +166,7 @@ export const Waybar: React.FC = () => {
   }, []);
   
   return (
-    <div className="waybar bg-black/80 backdrop-blur-sm text-white font-mono text-sm border-b border-white/10 h-[5vh] w-full z-10 grid grid-cols-3 p-1">
+    <div className="waybar">
       {/* Left section */}
       <div className="flex items-center">
         <div className="workspace active bg-white/20 px-2 rounded">1</div>

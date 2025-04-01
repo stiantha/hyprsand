@@ -1,22 +1,12 @@
-import React, { createContext, ReactNode, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { useKeyBindings, KeyBinding } from '../hooks/useKeyBindings';
+import { KeybindingContext } from './KeybindingContext';
 
-interface KeybindingContextType {
-  keyBindings: KeyBinding[];
-  addKeyBinding: (binding: KeyBinding) => void;
-  removeKeyBinding: (key: string) => void;
-  isHelpVisible: boolean;
-  toggleHelp: () => void;
-}
-
-export const KeybindingContext = createContext<KeybindingContextType | null>(null);
-
-export const KeybindingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const KeybindingProvider = ({ children }: { children: ReactNode }) => {
   const [keyBindings, setKeyBindings] = useState<KeyBinding[]>([]);
   const [isHelpVisible, setIsHelpVisible] = useState(false);
 
   const addKeyBinding = (binding: KeyBinding) => {
-    // Ensure the binding has a very high priority
     const bindingWithPriority = {
       ...binding,
     };
@@ -31,7 +21,6 @@ export const KeybindingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const toggleHelp = () => setIsHelpVisible(prev => !prev);
 
-  // Add F1 help toggle with low priority
   const allBindings = [
     ...keyBindings,
     {
@@ -42,7 +31,6 @@ export const KeybindingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   ];
 
-  // Use the keybindings hook
   useKeyBindings(allBindings);
 
   return (

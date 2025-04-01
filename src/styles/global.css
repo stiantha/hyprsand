@@ -2,7 +2,7 @@
 
 @layer components {
   .waybar {
-    @apply text-white p-2 flex items-center justify-between;
+    @apply bg-black/80 backdrop-blur-sm text-white font-mono text-sm border-b border-white/10 h-[5vh] w-full z-10 grid grid-cols-3 p-1;
   }
 }
 

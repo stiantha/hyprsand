@@ -3,13 +3,13 @@ import { TileWindow, TileDirection } from '../hooks/useTilingManager';
 import { TiledWindow } from './Window';
 import { KeybindingHandler } from './KeybindingHandler';
 import { KeyBinding } from '../hooks/useKeyBindings';
-import { useTiling } from '../contexts/TilingContext';
+import { useTilingManager } from '../hooks/useTilingManager';
 
 interface TilingManagerProps {
   children?: React.ReactNode;
 }
 
-export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
+export function TilingManager({ children }: TilingManagerProps) {
   const {
     nodes,
     focusedId,
@@ -21,7 +21,7 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
     toggleLayout,
     focusNextWindow,
     focusPreviousWindow,
-  } = useTiling();
+  } = useTilingManager();
   
   // Demo content creation function
   const createRandomContent = useCallback(() => {
@@ -138,4 +138,4 @@ export const TilingManager: React.FC<TilingManagerProps> = ({ children }) => {
       </div>
     </KeybindingHandler>
   );
-}; 
+} 

@@ -1,22 +1,8 @@
 import './styles/global.css'
-import { TilingManager } from './components/TilingManager'
-import { MainLayout } from './layouts'
-import { TilingProvider } from './contexts/TilingContext';
+import { MainLayout } from './layouts/MainLayout'
 
 function App() {
-  return (
-    <TilingProvider>
-      <AppContent />
-    </TilingProvider>
-  );
-}
-
-function AppContent() {
-  return (
-    <MainLayout>
-      <TilingManager />
-    </MainLayout>
-  );
+  return <MainLayout />;
 }
 
 export default App

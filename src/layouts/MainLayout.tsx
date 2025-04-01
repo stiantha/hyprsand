@@ -1,28 +1,25 @@
-import  {ReactNode } from 'react';
+import { ReactNode } from 'react';
+import { TilingProvider } from '../contexts/TilingProvider';
+import { KeybindingProvider } from '../contexts/KeybindingProvider';
 import { Waybar } from '../components/Waybar';
-import wallpaper from '../assets/wallpaper/nature.jpg';
+import { TilingManager } from '../components/TilingManager';
+import { Background } from '../components/Background';
 
 interface MainLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
-export const MainLayout = ({ children }: MainLayoutProps) => {
-
+export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="w-screen h-screen overflow-hidden text-gray-900 dark:text-white relative">
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 object-cover" 
-        style={{ 
-          backgroundImage: `url(${wallpaper})`,
-          backgroundSize: 'stretch',
-        }}
-      >
-
-      <div className="relative z-10">
-        <Waybar />  
-        {children}
-      </div>
-    </div>
-    </div>
+    <TilingProvider>
+      <KeybindingProvider>
+        <Background>
+          <Waybar />
+          <TilingManager>
+            {children}
+          </TilingManager>
+        </Background>
+      </KeybindingProvider>
+    </TilingProvider>
   );
-}; 
+} 
